@@ -1,66 +1,104 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+//COMO TESTAR AS ROTAS:
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+//ROTA 1 NOME - abra o http://localhost:8000/nome digite o nome e envie, você será direcionado a rota 'hello'.
 
-## About Laravel
+//ROTA 2 CALCULADORA - abra o http://localhost:8000/calculadora/num1/num2/operacao
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+//ROTA 3 IDADE - abra o http://localhost:8000/idade/ano/mes/dia
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Route::get('/nome', function () {
+    return view('nome');
+});
 
-## Learning Laravel
+Route::get('/hello', function () {
+    $name = request()->query('nome');
+    return view('hello', ['name' => $name]);
+})->name('hello');
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Route::get('/calculadora/{num1}/{num2}/{operation?}', function ($num1, $num2, $operation = null) {
+    $result = null;
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+    if ($num2 == 0) {
+        return "O segundo número é Zero (0).<br>
+        O valor da soma e subtração será igual ao primeiro número: $num1.<br>
+        O valor da multiplicação por 0 é sempre: 0.<br>
+        E desculpe, não é possível fazer uma divisão por 0.<br>
+        Recomendo que escolha outro número.";
+    }
 
-## Laravel Sponsors
+    switch ($operation) {
+        case 'soma':
+            $result = $num1 + $num2;
+            break;
+        case 'subtracao':
+            $result = $num1 - $num2;
+            break;
+        case 'multiplicacao':
+            if ($num2 == 0) {
+                return ' O valor da multiplicação por 0 é sempre: 0.';
+            }      
+            $result = $num1 * $num2;
+            break;
+        case 'divisao':
+            if ($num2 == 0) {
+                return 'Desculpe, não é possível fazer uma divisão por Zero (0).';
+            }           
+            $result = $num1 / $num2;
+            break;
+        default:
+            $results = [
+                'soma' => $num1 + $num2,
+                'subtraçao' => $num1 - $num2,
+                'multiplicação' => $num1 * $num2,
+                'divisão' => $num1 / $num2,
+            ];
+            break;
+    }
+    if ($result) {
+        return "Resultado da operação $operation: $result";
+    } else {
+        $resultString = '';
+        foreach ($results as $op => $res) {
+            $resultString .= "Resultado da operação $op: $res<br>";
+        }
+        return $resultString;
+    }
+})->where(['num1' => '[0-9]+', 'num2' => '[0-9]+'])->name('calculator');
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
 
-### Premium Partners
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
 
-## Contributing
+Route::get('/idade/{ano}/{mes?}/{dia?}', function ($ano, $mes = null, $dia = null) {
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    if (!preg_match('/^\d{4}$/', $ano)) {
+        return 'O ano deve ter 4 dígitos.';
+    }
+    if (($mes && !preg_match('/^\d{1,2}$/', $mes)) || ($mes && ($mes < 1 || $mes > 12))) {
+        return 'O mês deve ser um número entre 1 e 12.';
+    }
+    if (($dia && !preg_match('/^\d{1,2}$/', $dia)) || ($dia && ($dia < 1 || $dia > 31))) {
+        return 'O dia deve ser um número entre 1 e 31.';
+    }
+    if ($mes && $dia && !checkdate($mes, $dia, $ano)) {
+        return 'A data informada é inválida.';
+    }
 
-## Code of Conduct
+    $data = new DateTime("$ano-" . ($mes ?? '01') . "-" . ($dia ?? '01'));
+    $hoje = new DateTime();
+    if ($data > $hoje) {
+        return 'A data informada está no futuro. Informe a data correta.';
+    }
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+    $idade = $hoje->diff($data)->y;
 
-## Security Vulnerabilities
+    if ($mes && $dia) {
+        return "Você nasceu em $dia/$mes/$ano e tem $idade anos.";
+    } elseif ($mes) {
+        return "Você nasceu em $mes/$ano e tem $idade anos.";
+    } else {
+        return "Você nasceu em $ano e tem $idade anos.";
+    }
+})->name('calcular_idade');
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
